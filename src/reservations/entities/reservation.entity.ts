@@ -1,57 +1,17 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinTable,
-  ManyToMany,
-} from 'typeorm';
-import { Restaurant } from './restaurant.entity';
-import { Sector } from './sector.entity';
-import { Table } from './table.entity';
+import { ISODateTime, ReservationStatus } from 'src/shared/types';
 import { Customer } from './customer.entity';
 
-export type ReservationStatus = 'CONFIRMED' | 'PENDING' | 'CANCELLED';
-
-@Entity('reservations')
 export class Reservation {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @ManyToOne(() => Restaurant, (r) => r.reservations, { onDelete: 'CASCADE' })
-  restaurant: Restaurant;
-
-  @ManyToOne(() => Sector, (s) => s.reservations, { onDelete: 'CASCADE' })
-  sector: Sector;
-
-
-  @ManyToMany(() => Table)
-  @JoinTable()
-  tables: Table[];
-
-  @ManyToOne(() => Customer, (c) => c.reservations, { cascade: true })
-  customer: Customer;
-
-  @Column()
+  restaurantId: string;
+  sectorId: string;
+  tableIds: string[];                              // CORE: single table; BONUS: combinations
   partySize: number;
-
-  @Column()
-  startDateTimeISO: string;
-
-  @Column()
-  endDateTimeISO: string;
-
-  @Column({ type: 'text', nullable: true })
+  startDateTimeISO: ISODateTime;
+  endDateTimeISO: ISODateTime;
+  status: ReservationStatus;                       // CORE uses CONFIRMED | CANCELLED
+  customer: Customer;
   notes?: string;
-
-  @Column({ type: 'text', default: 'CONFIRMED' })
-  status: ReservationStatus;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
 }
