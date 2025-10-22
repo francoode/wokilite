@@ -8,3 +8,4 @@ export class Restaurant {
   createdAt: ISODateTime;
   updatedAt: ISODateTime;
 }
+

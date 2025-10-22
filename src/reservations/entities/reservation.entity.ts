@@ -5,11 +5,11 @@ export class Reservation {
   id: string;
   restaurantId: string;
   sectorId: string;
-  tableIds: string[];                              // CORE: single table; BONUS: combinations
+  tableId: string;                        
   partySize: number;
   startDateTimeISO: ISODateTime;
   endDateTimeISO: ISODateTime;
-  status: ReservationStatus;                       // CORE uses CONFIRMED | CANCELLED
+  status: ReservationStatus;
   customer: Customer;
   notes?: string;
   createdAt: ISODateTime;
