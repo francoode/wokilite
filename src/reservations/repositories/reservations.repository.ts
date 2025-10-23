@@ -1,26 +1,61 @@
 import { Injectable } from '@nestjs/common';
-import { AvailabilityParam } from '../interfaces/reservations.types';
+import {
+  AvailabilityParam,
+  AvailabilityQueryResult,
+} from '../interfaces/reservations.types';
+import { DataSource } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { Reservation } from '../entities/reservation.entity';
+import { Table } from '../entities/table.entity';
+import { Restaurant } from '../entities/restaurant.entity';
 
 @Injectable()
 export class ReservationsRepository {
-  getAvailability = async (params: AvailabilityParam) => {
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
+
+  //@TODO deberia ir en restaurante
+getAvailabilities = async (
+    params: AvailabilityParam,
+  ): Promise<AvailabilityQueryResult[]> => {
     const { date, partySize, restaurantId, sectorId } = params;
 
-/*     const results = await AppDataSource.query(
-    `
-        SELECT * 
-        FROM restaurants rest
-        JOIN sector sec on sec.restaurantId = rest.id
-        JOIN tables tab on tab.sectorId = sec.id
-        LEFT JOIN reservations r ON r.tableId = tab.id
-        WHERE
-        rest.id = $1 AND 
-        sec.id = $2 AND 
-        (DATE(r.startDateTimeISO) = $3 OR r.id IS NULL) AND
-        minSize >= $4 AND
-        maxSize <= $5
+    const results = await this.dataSource.query(
+      `
+        SELECT 
+          t.id AS tableId,
+          t.name AS tableName,
+          t.sectorId,
+          t.minSize,
+          t.maxSize,
+          r.id AS reservationId,
+          r.customerId,
+          r.partySize,
+          r.startDateTimeISO,
+          r.endDateTimeISO,
+          r.status
+        FROM tables t
+        LEFT JOIN reservations r ON t.id = r.tableId
+        WHERE t.sectorId = ?
+        AND t.minSize <= ?
+        AND t.maxSize >= ?;  
     `,
-      [restaurantId, sectorId, date, partySize, partySize],
-    ); */
+      [sectorId, partySize, partySize],
+    );
+
+    return results;
   };
+
+  getRestaurantById = async (
+    restaurantId: string,
+  ): Promise<Restaurant | null> => {
+    const restaurant = await this.dataSource.query(
+      `
+      SELECT *
+      FROM restaurants
+      WHERE id = ?;
+    `,
+      [restaurantId],
+    );
+    return restaurant[0] || null;
+  }
 }

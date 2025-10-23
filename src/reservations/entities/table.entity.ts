@@ -1,11 +1,10 @@
 import { ISODateTime } from "src/shared/types";
-
 export class Table {
   id: string;
   sectorId: string;
   name: string;
-  minSize: number;                                 // minimum party size
-  maxSize: number;                                 // maximum party size
+  minSize: number;                                 
+  maxSize: number;                                
   createdAt: ISODateTime;
   updatedAt: ISODateTime;
 }

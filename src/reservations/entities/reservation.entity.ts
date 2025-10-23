@@ -1,5 +1,6 @@
-import { ISODateTime, ReservationStatus } from 'src/shared/types';
+import { ISODateTime } from 'src/shared/types';
 import { Customer } from './customer.entity';
+import { ReservationStatus } from '../interfaces/reservations.types';
 
 export class Reservation {
   id: string;
