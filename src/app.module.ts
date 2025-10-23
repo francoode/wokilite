@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ReservationsModule } from './reservations/reservations.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [ReservationsModule, TypeOrmModule.forRoot({
@@ -12,7 +13,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       username: 'root',
       password: 'root',
       database: 'wokilite',
-    }),],
+    }), CustomersModule,],
   controllers: [AppController],
   providers: [AppService],
 })

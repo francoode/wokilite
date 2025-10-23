@@ -5,10 +5,10 @@ import { Restaurant, Shift } from 'src/reservations/entities/restaurant.entity';
 
 export class Slot {
 
-  static getSlots(shifts: Shift[] = [], timezone: string): string[] {
+  static getSlots(shifts: Shift[] = [], date: string): string[] {
     const interval = 15;
     const slots: string[] = [];
-
+    
     const periods = shifts?.length
       ? shifts
       : [{ start: '00:00', end: '23:59' }];
@@ -18,7 +18,9 @@ export class Slot {
       const endTime = parse(period.end, 'HH:mm', new Date());
 
       while (isBefore(current, endTime)) {
-        slots.push(formatInTimeZone(current, timezone ,"yyyy-MM-dd'T'HH:mm:ssXXX"));
+        let formatedDate = format(current, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        formatedDate = date + formatedDate.slice(10);
+        slots.push(formatedDate);
         current = addMinutes(current, interval);
       }
     }
