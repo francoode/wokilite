@@ -7,10 +7,14 @@ import {
 } from '../interfaces/reservations.types';
 import { ReservationsRepository } from '../repositories/reservations.repository';
 import { Slot } from 'src/shared/slot';
+import { CustomersRepository } from 'src/customers/repositories/customers.repository';
+import { CreateReservationDto } from '../dtos/create-reservation.dto';
+import { Table } from '../entities/table.entity';
 
 @Injectable()
 export class ReservationsService {
   @Inject() reservationsRepository: ReservationsRepository;
+  @Inject() customersRepository: CustomersRepository;
 
   checkAvailability = async (params: AvailabilityParam) => {
     console.log('params', params);
@@ -21,7 +25,7 @@ export class ReservationsService {
     if (!restaurant) throw new Error('Restaurant not found');
 
     const reservations =
-      await this.reservationsRepository.getAvailabilities(params);
+      await this.reservationsRepository.getSectorStatusByPartySize(params);
 
     const reservationsByTable = this.manageTable(reservations);
 
@@ -30,10 +34,10 @@ export class ReservationsService {
     const time = this.serilizeResponse(reservationsByTable, slots);
 
     return {
-       slotMinutes: 15,
-  durationMinutes: 90,
-       slots: time,
-    }
+      slotMinutes: 15,
+      durationMinutes: 90,
+      slots: time,
+    };
   };
 
   manageTable = (reservations: AvailabilityQueryResult[]) => {
@@ -83,5 +87,23 @@ export class ReservationsService {
     }
 
     return time;
+  };
+
+  create = async (data: CreateReservationDto) => {
+    const customer = await this.customersRepository.getOrCreate(data);
+
+    const sectorStatus = await this.reservationsRepository.getSectorStatusByPartySize({
+      date: data.startDateTimeISO,
+      partySize: data.partySize,
+      restaurantId: data.restaurantId,
+      sectorId: data.sectorId,
+    });
+
+    const availableTables = sectorStatus.filter((s) => !s.reservationId);
+    const table = Table.findTableWithLeastSpace(availableTables);
+    if (!table) throw new Error('No available table found');
+
+    
+
   };
 }

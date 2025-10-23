@@ -14,7 +14,7 @@ export class ReservationsRepository {
   constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   //@TODO deberia ir en restaurante
-getAvailabilities = async (
+  getSectorStatusByPartySize = async (
     params: AvailabilityParam,
   ): Promise<AvailabilityQueryResult[]> => {
     const { date, partySize, restaurantId, sectorId } = params;
@@ -57,5 +57,5 @@ getAvailabilities = async (
       [restaurantId],
     );
     return restaurant[0] || null;
-  }
+  };
 }
