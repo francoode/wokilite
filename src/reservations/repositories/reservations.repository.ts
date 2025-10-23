@@ -6,7 +6,7 @@ export class ReservationsRepository {
   getAvailability = async (params: AvailabilityParam) => {
     const { date, partySize, restaurantId, sectorId } = params;
 
-    const results = await AppDataSource.query(
+/*     const results = await AppDataSource.query(
     `
         SELECT * 
         FROM restaurants rest
@@ -21,6 +21,6 @@ export class ReservationsRepository {
         maxSize <= $5
     `,
       [restaurantId, sectorId, date, partySize, partySize],
-    );
+    ); */
   };
 }
