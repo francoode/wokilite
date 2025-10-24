@@ -1,4 +1,4 @@
-import { ISODateTime } from 'src/shared/types';
+import { ISODateTime } from 'src/shared/types/types';
 import { Customer } from './customer.entity';
 import { ReservationStatus } from '../interfaces/reservations.types';
 

@@ -11,6 +11,7 @@ import {
 import { ReservationsService } from './services/reservations.service';
 import { AvailabilityDto } from './dtos/availability.dto';
 import { CreateReservationDto } from './dtos/create-reservation.dto';
+import { DailyReservationsQueryDto } from './dtos/daily-reservation.dto';
 
 @Controller('')
 export class ReservationsController {
@@ -18,7 +19,7 @@ export class ReservationsController {
 
   @Get('availability')
   async checkAvailability(@Query() query: AvailabilityDto) {
-    return this.reservationsService.checkAvailability(query);
+    return this.reservationsService.getSectorStatus(query);
   }
 
   @Post('reservations')
@@ -34,10 +35,10 @@ export class ReservationsController {
   @Get('/reservations/day')
   getDailyReservations(@Query() query: DailyReservationsQueryDto) {
     const { restaurantId, date, sectorId } = query;
-    return this.reservationsService.findDailyReservations(
+/*     return this.reservationsService.findDailyReservations(
       restaurantId,
       date,
       sectorId,
-    );
+    ); */
   }
 }

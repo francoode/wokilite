@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   AvailabilityParam,
   AvailabilityQueryResult,
@@ -7,14 +7,13 @@ import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Reservation } from '../entities/reservation.entity';
 import { Table } from '../entities/table.entity';
-import { Restaurant } from '../entities/restaurant.entity';
 import { Customer } from '../entities/customer.entity';
+import { CreateReservationDto } from '../dtos/create-reservation.dto';
 
 @Injectable()
 export class ReservationsRepository {
   constructor(@InjectDataSource() private dataSource: DataSource) {}
 
-  //@TODO deberia ir en restaurante
   getSectorStatusByPartySize = async (
     params: AvailabilityParam,
   ): Promise<AvailabilityQueryResult[]> => {
@@ -37,39 +36,27 @@ export class ReservationsRepository {
         FROM tables t
         LEFT JOIN reservations r ON t.id = r.tableId
         WHERE t.sectorId = ?
+        AND DATE(r.startDateTimeISO) = ?
         AND t.minSize <= ?
         AND t.maxSize >= ?;  
     `,
-      [sectorId, partySize, partySize],
+      [sectorId, date, partySize, partySize],
     );
 
     return results;
   };
 
-  getRestaurantById = async (
-    restaurantId: string,
-  ): Promise<Restaurant | null> => {
-    const restaurant = await this.dataSource.query(
-      `
-      SELECT *
-      FROM restaurants
-      WHERE id = ?;
-    `,
-      [restaurantId],
-    );
-    return restaurant[0] || null;
-  };
+
 
   create = async (
-    data: Partial<Reservation>,
+    data: CreateReservationDto,
     customer: Customer,
-    table: Table,
+    endDateTimeISO: string
   ): Promise<Reservation> => {
     const {
       restaurantId,
       sectorId,
       startDateTimeISO,
-      endDateTimeISO,
       partySize,
     } = data;
 

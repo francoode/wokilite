@@ -1,7 +1,5 @@
 import { isBefore, addMinutes, format, parse } from 'date-fns';
-import { formatInTimeZone } from "date-fns-tz";
-
-import { Restaurant, Shift } from 'src/reservations/entities/restaurant.entity';
+import { Shift } from 'src/reservations/entities/restaurant.entity';
 
 export class Slot {
 

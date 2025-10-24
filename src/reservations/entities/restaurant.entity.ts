@@ -1,4 +1,4 @@
-import { ISODateTime } from "src/shared/types";
+import { ISODateTime } from "src/shared/types/types";
 
 export type Shift = {
   start: string; 

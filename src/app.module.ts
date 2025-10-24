@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ReservationsModule } from './reservations/reservations.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CustomersModule } from './customers/customers.module';
+import { RestaurantModule } from './restaurant/restaurant.module';
 
 @Module({
   imports: [ReservationsModule, TypeOrmModule.forRoot({
@@ -13,7 +14,7 @@ import { CustomersModule } from './customers/customers.module';
       username: 'root',
       password: 'root',
       database: 'wokilite',
-    }), CustomersModule,],
+    }), CustomersModule, RestaurantModule,],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,4 +1,4 @@
-import { Slot } from "src/shared/slot";
+import { Slot } from "src/reservations/entities/slot";
 
 export type ReservationStatus = 'CONFIRMED' | 'CANCELLED';
 
@@ -24,11 +24,12 @@ export type AvailabilityQueryResult = {
     status: ReservationStatus | null;
 }
 
-export type AvailabilitySerialize = { [key: string]: {
+export type ReservationsByTable = { [key: string]: {
   startDateTimeISO: string,
   endDateTimeISO: string,
+  status: ReservationStatus
 }[] } ;
 
-export type SerializeTime = {
-  start: string, available: boolean, reason?: string, table: string[]
+export type SlotAvailability = {
+  start: string, available: boolean, reason?: string, tables: string[]
 }
