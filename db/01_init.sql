@@ -54,5 +54,6 @@ CREATE TABLE IF NOT EXISTS reservations (
     CONSTRAINT fk_reservation_restaurant FOREIGN KEY (restaurantId) REFERENCES restaurants(id),
     CONSTRAINT fk_reservation_sector FOREIGN KEY (sectorId) REFERENCES sector(id),
     CONSTRAINT fk_reservation_table FOREIGN KEY (tableId) REFERENCES tables(id),
-    CONSTRAINT fk_reservation_customer FOREIGN KEY (customerId) REFERENCES customers(id)
+    CONSTRAINT fk_reservation_customer FOREIGN KEY (customerId) REFERENCES customers(id),
+    CONSTRAINT unique_sector_startDate UNIQUE (sectorId, startDateTimeISO);
 );

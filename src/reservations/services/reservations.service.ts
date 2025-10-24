@@ -10,6 +10,8 @@ import { Slot } from 'src/shared/slot';
 import { CustomersRepository } from 'src/customers/repositories/customers.repository';
 import { CreateReservationDto } from '../dtos/create-reservation.dto';
 import { Table } from '../entities/table.entity';
+import { Restaurant, Shift } from '../entities/restaurant.entity';
+import { isWithinInterval, parse } from 'date-fns';
 
 @Injectable()
 export class ReservationsService {
@@ -92,18 +94,46 @@ export class ReservationsService {
   create = async (data: CreateReservationDto) => {
     const customer = await this.customersRepository.getOrCreate(data);
 
-    const sectorStatus = await this.reservationsRepository.getSectorStatusByPartySize({
-      date: data.startDateTimeISO,
-      partySize: data.partySize,
-      restaurantId: data.restaurantId,
-      sectorId: data.sectorId,
-    });
+    const sectorStatus =
+      await this.reservationsRepository.getSectorStatusByPartySize({
+        date: data.startDateTimeISO,
+        partySize: data.partySize,
+        restaurantId: data.restaurantId,
+        sectorId: data.sectorId,
+      });
+
+    const restaurant = await this.reservationsRepository.getRestaurantById(
+      data.restaurantId,
+    );
+    if (!restaurant) throw new Error('Restaurant not found');
 
     const availableTables = sectorStatus.filter((s) => !s.reservationId);
+
+
+    if (!this.isWithinShift(restaurant.shifts, data.startDateTimeISO)) {
+      throw new Error('Reservation time is outside of restaurant shifts');
+    }
+
     const table = Table.findTableWithLeastSpace(availableTables);
     if (!table) throw new Error('No available table found');
 
-    
+    //Todo se podria crear un retry si falla
+    return this.reservationsRepository.create(data, customer, table);
+  };
 
+  cancel = async (id: string) => {
+    return this.reservationsRepository.cancel(id);
+  }
+
+  isWithinShift = (shifts: Shift[] | undefined, time: string): boolean => {
+    if (!shifts) return true;
+    // parsea la hora que querés verificar
+    const target = parse(time, 'HH:mm', new Date());
+
+    return shifts.some((shift) => {
+      const start = parse(shift.start, 'HH:mm', new Date());
+      const end = parse(shift.end, 'HH:mm', new Date());
+      return isWithinInterval(target, { start, end });
+    });
   };
 }
