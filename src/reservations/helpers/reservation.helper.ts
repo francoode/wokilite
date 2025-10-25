@@ -97,8 +97,9 @@ export class ReservationsHelper {
   static isWithinShift = (shifts: Shift[] | undefined, resDate: Date): boolean => {
     if (!shifts || shifts.length === 0) return true;
 
-    const targetHours = resDate.getHours();
-    const targetMinutes = resDate.getMinutes();
+    const targetHours = resDate.getUTCHours();
+    const targetMinutes = resDate.getUTCMinutes();
+    
     const targetTimeInMinutes = targetHours * 60 + targetMinutes;
 
     const timeToMinutes = (timeStr: string): number => {
@@ -109,6 +110,7 @@ export class ReservationsHelper {
     return shifts.some((shift) => {
       const startInMinutes = timeToMinutes(shift.start);
       const endInMinutes = timeToMinutes(shift.end);
+
       return (
         targetTimeInMinutes >= startInMinutes &&
         targetTimeInMinutes <= endInMinutes

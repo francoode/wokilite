@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Headers,
+  HttpCode,
   Inject,
   Param,
   Post,
@@ -25,12 +26,18 @@ export class ReservationsController {
     @Query() query: AvailabilityDto,
     @Headers('Idempotency-Key') idempotencyKey: string,
   ) {
-    const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
-    if (cachedResponse) return cachedResponse;
+    try {
+      const cachedResponse =
+        this.reqCollector.executeIdempotent(idempotencyKey);
+      if (cachedResponse) return cachedResponse;
 
-    const response = await this.reservationsService.getSectorStatus(query);
-    this.reqCollector.endRequest(idempotencyKey, response);
-    return response;
+      const response = await this.reservationsService.getSectorStatus(query);
+      this.reqCollector.endRequest(idempotencyKey, response);
+      return response;
+    } catch (e) {
+      this.reqCollector.endRequest(idempotencyKey, null);
+      throw e;
+    }
   }
 
   @Post('reservations')
@@ -38,26 +45,39 @@ export class ReservationsController {
     @Body() createReservationDto: CreateReservationDto,
     @Headers('Idempotency-Key') idempotencyKey: string,
   ) {
-    const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
-    if (cachedResponse) return cachedResponse;
+    try {
+      const cachedResponse =
+        this.reqCollector.executeIdempotent(idempotencyKey);
+      if (cachedResponse) return cachedResponse;
 
-    const response =
-      await this.reservationsService.create(createReservationDto);
-    this.reqCollector.endRequest(idempotencyKey, response);
-    return response;
+      const response =
+        await this.reservationsService.create(createReservationDto);
+      this.reqCollector.endRequest(idempotencyKey, response);
+      return response;
+    } catch (e) {
+      this.reqCollector.endRequest(idempotencyKey, null);
+      throw e;
+    }
   }
 
   @Delete('reservations/:id')
+  @HttpCode(204)
   async cancel(
     @Param('id') id: string,
     @Headers('Idempotency-Key') idempotencyKey: string,
   ) {
-    const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
-    if (cachedResponse) return cachedResponse;
+    try {
+      const cachedResponse =
+        this.reqCollector.executeIdempotent(idempotencyKey);
+      if (cachedResponse) return cachedResponse;
 
-    const response = await this.reservationsService.cancel(id);
-    this.reqCollector.endRequest(idempotencyKey, response);
-    return response;
+      const response = await this.reservationsService.cancel(id);
+      this.reqCollector.endRequest(idempotencyKey, response);
+      return response;
+    } catch (e) {
+      this.reqCollector.endRequest(idempotencyKey, null);
+      throw e;
+    }
   }
 
   @Get('/reservations/day')
@@ -65,12 +85,19 @@ export class ReservationsController {
     @Query() query: DailyReservationsQueryDto,
     @Headers('Idempotency-Key') idempotencyKey: string,
   ) {
-    const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
-    if (cachedResponse) return cachedResponse;
+    try {
+      const cachedResponse =
+        this.reqCollector.executeIdempotent(idempotencyKey);
+      if (cachedResponse) return cachedResponse;
 
-    const response = await this.reservationsService.getDailyReservations(query);
+      const response =
+        await this.reservationsService.getDailyReservations(query);
 
-    this.reqCollector.endRequest(idempotencyKey, response);
-    return response;
+      this.reqCollector.endRequest(idempotencyKey, response);
+      return response;
+    } catch (e) {
+      this.reqCollector.endRequest(idempotencyKey, null);
+      throw e;
+    }
   }
 }

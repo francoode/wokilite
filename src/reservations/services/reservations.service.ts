@@ -126,6 +126,7 @@ export class ReservationsService {
         restaurantId: reservation.restaurantId,
         sectorId: reservation.sectorId,
         partySize: reservation.partySize,
+        tableId: reservation.tableId,
         startDateTimeISO: reservation.startDateTimeISO,
         customer: {
           name: customer.name,

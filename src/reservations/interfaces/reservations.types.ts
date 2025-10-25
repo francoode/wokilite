@@ -42,6 +42,7 @@ export type CreateReservationResponse = {
   restaurantId: string;
   sectorId: string;
   partySize: number;
+  tableId: string;
   startDateTimeISO: string;
   customer: {
     name: string;
