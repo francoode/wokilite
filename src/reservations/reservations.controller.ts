@@ -13,7 +13,7 @@ import { ReservationsService } from './services/reservations.service';
 import { AvailabilityDto } from './dtos/availability.dto';
 import { CreateReservationDto } from './dtos/create-reservation.dto';
 import { DailyReservationsQueryDto } from './dtos/daily-reservation.dto';
-import { RequestCollector } from 'src/shared/service/request-idempotency.service';
+import { RequestCollector } from '../shared/service/request-idempotency.service';
 
 @Controller('')
 export class ReservationsController {

@@ -13,15 +13,15 @@ import {
   SectorStatusResponse
 } from '../interfaces/reservations.types';
 import { ReservationsRepository } from '../repositories/reservations.repository';
-import { CustomersRepository } from 'src/customers/repositories/customers.repository';
+import { CustomersRepository } from '../../customers/repositories/customers.repository';
 import { CreateReservationDto } from '../dtos/create-reservation.dto';
 import { format } from 'date-fns';
-import { RESERVATION_DURATION, SLOT_MINUTES } from 'src/shared/shared.const';
-import { RestaurantRepository } from 'src/restaurants/repositories/restaurant.repository';
+import { RESERVATION_DURATION, SLOT_MINUTES } from '../../shared/shared.const';
+import { RestaurantRepository } from '../../restaurants/repositories/restaurant.repository';
 import { ReservationsHelper } from '../helpers/reservation.helper';
-import { TableHelper } from 'src/tables/helpers/table.helper';
-import { TableRepository } from 'src/tables/table.repository';
-import { Table } from 'src/tables/entities/table.entity';
+import { TableHelper } from '../../tables/helpers/table.helper';
+import { TableRepository } from '../../tables/table.repository';
+import { Table } from '../../tables/entities/table.entity';
 import { DailyReservationsQueryDto } from '../dtos/daily-reservation.dto';
 
 @Injectable()

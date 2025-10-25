@@ -20,6 +20,7 @@ export class RequestCollector {
       throw new BadRequestException('Missing Idempotency-Key header');
     }
     const req = this.requests[requestId];
+
     if (req && req.inProgress === true)
       throw new ConflictException('Request is already being processed');
     if (req && req.response) return req.response;

@@ -1,4 +1,4 @@
-import { SlotAvailability } from 'src/reservations/interfaces/reservations.types';
+import { SlotAvailability } from '../../reservations/interfaces/reservations.types';
 
 export class TableHelper {
   static getAvailableTables = (

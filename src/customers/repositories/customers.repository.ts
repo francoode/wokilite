@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { CreateReservationDto } from 'src/reservations/dtos/create-reservation.dto';
+import { CreateReservationDto } from '../../reservations/dtos/create-reservation.dto';
 import { DataSource } from 'typeorm';
 
 @Injectable()

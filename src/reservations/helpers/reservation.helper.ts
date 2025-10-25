@@ -1,4 +1,4 @@
-import { convertDateStringToTzDate } from 'src/shared/shared.helper';
+import { convertDateStringToTzDate } from '../../shared/shared.helper';
 import { Restaurant, Shift } from '../../restaurants/entities/restaurant.entity';
 import { Slot } from '../entities/slot';
 import {
@@ -7,7 +7,7 @@ import {
   SlotAvailability,
 } from '../interfaces/reservations.types';
 import { addMinutes } from 'date-fns';
-import { RESERVATION_DURATION } from 'src/shared/shared.const';
+import { RESERVATION_DURATION } from '../../shared/shared.const';
 
 export class ReservationsHelper {
   static groupReservationsByTable = (
