@@ -38,6 +38,7 @@ export type SectorStatusResponse = {
 }
 
 export type CreateReservationResponse = {
+  id: string;
   restaurantId: string;
   sectorId: string;
   partySize: number;

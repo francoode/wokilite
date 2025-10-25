@@ -28,7 +28,9 @@ export class ReservationsController {
     const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
     if (cachedResponse) return cachedResponse;
 
-    return await this.reservationsService.getSectorStatus(query);
+    const response = await this.reservationsService.getSectorStatus(query);
+    this.reqCollector.endRequest(idempotencyKey, response);
+    return response;
   }
 
   @Post('reservations')
@@ -39,7 +41,10 @@ export class ReservationsController {
     const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
     if (cachedResponse) return cachedResponse;
 
-    return await this.reservationsService.create(createReservationDto);
+    const response =
+      await this.reservationsService.create(createReservationDto);
+    this.reqCollector.endRequest(idempotencyKey, response);
+    return response;
   }
 
   @Delete('reservations/:id')
@@ -50,7 +55,9 @@ export class ReservationsController {
     const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
     if (cachedResponse) return cachedResponse;
 
-    return await this.reservationsService.cancel(id);
+    const response = await this.reservationsService.cancel(id);
+    this.reqCollector.endRequest(idempotencyKey, response);
+    return response;
   }
 
   @Get('/reservations/day')
@@ -61,7 +68,9 @@ export class ReservationsController {
     const cachedResponse = this.reqCollector.executeIdempotent(idempotencyKey);
     if (cachedResponse) return cachedResponse;
 
-    const { restaurantId, date, sectorId } = query;
-    return await this.reservationsService.getDailyReservations(query);
+    const response = await this.reservationsService.getDailyReservations(query);
+
+    this.reqCollector.endRequest(idempotencyKey, response);
+    return response;
   }
 }

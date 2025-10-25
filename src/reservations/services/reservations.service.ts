@@ -122,6 +122,7 @@ export class ReservationsService {
       });
 
       return {
+        id: reservation.id,
         restaurantId: reservation.restaurantId,
         sectorId: reservation.sectorId,
         partySize: reservation.partySize,

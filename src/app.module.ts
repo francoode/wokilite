@@ -6,6 +6,7 @@ import { RestaurantRepository } from './restaurants/repositories/restaurant.repo
 import { CustomersRepository } from './customers/repositories/customers.repository';
 import { ReservationsController } from './reservations/reservations.controller';
 import { TableRepository } from './tables/table.repository';
+import { RequestCollector } from './shared/service/request-idempotency.service';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { TableRepository } from './tables/table.repository';
     ReservationsService,
     RestaurantRepository,
     CustomersRepository,
-    TableRepository
+    TableRepository,
+    RequestCollector
   ],
 })
 export class AppModule {}
