@@ -1,5 +1,5 @@
 import { isBefore, addMinutes, format, parse } from 'date-fns';
-import { Shift } from 'src/reservations/entities/restaurant.entity';
+import { Shift } from 'src/restaurants/entities/restaurant.entity';
 
 export class Slot {
 

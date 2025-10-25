@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   AvailabilityParam,
   AvailabilityQueryResult,
@@ -6,9 +10,6 @@ import {
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Reservation } from '../entities/reservation.entity';
-import { Table } from '../entities/table.entity';
-import { Customer } from '../entities/customer.entity';
-import { CreateReservationDto } from '../dtos/create-reservation.dto';
 
 @Injectable()
 export class ReservationsRepository {
@@ -34,30 +35,38 @@ export class ReservationsRepository {
           r.endDateTimeISO,
           r.status
         FROM tables t
-        LEFT JOIN reservations r ON t.id = r.tableId
+        LEFT JOIN reservations r 
+          ON t.id = r.tableId
+          AND DATE(r.startDateTimeISO) = ?
         WHERE t.sectorId = ?
-        AND DATE(r.startDateTimeISO) = ?
         AND t.minSize <= ?
-        AND t.maxSize >= ?;  
+        AND t.maxSize >= ?
     `,
-      [sectorId, date, partySize, partySize],
+      [date, sectorId, partySize, partySize],
     );
 
     return results;
   };
 
-
-
-  create = async (
-    data: CreateReservationDto,
-    customer: Customer,
-    endDateTimeISO: string
-  ): Promise<Reservation> => {
+  create = async (data: {
+    restaurantId: string;
+    sectorId: string;
+    customerId: string;
+    partySize: number;
+    tableId: string;
+    startDateTimeISO: string;
+    endDateTimeISO: string;
+    notes?: string;
+  }): Promise<Reservation> => {
     const {
       restaurantId,
       sectorId,
-      startDateTimeISO,
       partySize,
+      tableId,
+      startDateTimeISO,
+      endDateTimeISO,
+      customerId,
+      notes,
     } = data;
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -66,33 +75,34 @@ export class ReservationsRepository {
     await queryRunner.startTransaction();
 
     try {
-      // 1️⃣ Buscar si existe reserva (bloquea si hay una fila o un hueco)
+      //Bloqueo la fila de la tabla para evitar double booking
       const existing = await queryRunner.query(
         `
         SELECT id FROM reservations
-        WHERE sectorId = ? AND startDateTimeISO = ?
+        WHERE sectorId = ? AND startDateTimeISO = ? AND status = 'CONFIRMED' AND tableId = ?
         FOR UPDATE
       `,
-        [sectorId, startDateTimeISO],
+        [sectorId, startDateTimeISO, tableId],
       );
 
-      if (existing.length > 0) {
-        throw new Error('Slot already booked');
-      }
+      if (existing.length > 0)
+        throw new ConflictException('Slot already booked');
 
-      // 2️⃣ Crear la reserva
       const result = await queryRunner.query(
         `
-        INSERT INTO reservations (restaurantId, sectorId, customerId, startDateTimeISO, endDateTimeISO, partySize)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO reservations (restaurantId, sectorId, customerId, startDateTimeISO, endDateTimeISO, partySize, tableId, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
           restaurantId,
           sectorId,
-          customer.id,
+          customerId,
           startDateTimeISO,
           endDateTimeISO,
           partySize,
+          tableId,
+          'CONFIRMED',
+          notes
         ],
       );
 
@@ -109,12 +119,9 @@ export class ReservationsRepository {
 
       return reservation;
     } catch (error) {
-      // 4️⃣ Si hay error, revertir
       await queryRunner.rollbackTransaction();
-      console.error('Error creating reservation:', error.message);
       throw error;
     } finally {
-      // 5️⃣ Liberar el runner
       await queryRunner.release();
     }
   };
@@ -133,19 +140,19 @@ export class ReservationsRepository {
 
   async findDailyReservations(
     restaurantId: string,
-    date: string, // formato YYYY-MM-DD
+    date: string,
     sectorId?: string,
   ) {
     const reservations = await this.dataSource.query(
       `
-  SELECT *
-  FROM reservations r
-  JOIN customers c ON c.id = r.customerId
-  WHERE r.restaurantId = ?
-    AND DATE(r.startDateTimeISO) = ?
-    ${sectorId ? 'AND r.sectorId = ?' : 'AND true'}
-  ORDER BY r.startDateTimeISO;
-  `,
+        SELECT *
+        FROM reservations r
+        JOIN customers c ON c.id = r.customerId
+        WHERE r.restaurantId = ?
+          AND DATE(r.startDateTimeISO) = ?
+          ${sectorId ? 'AND r.sectorId = ?' : 'AND true'}
+        ORDER BY r.startDateTimeISO;
+    `,
       [restaurantId, date, sectorId || null],
     );
 

@@ -1,5 +1,3 @@
-import { ISODateTime } from "src/shared/types/types";
-
 export type Shift = {
   start: string; 
   end: string;   
@@ -9,7 +7,7 @@ export class Restaurant {
   name: string;
   timezone: string;                                
   shifts?: Array<Shift>; 
-  createdAt: ISODateTime;
-  updatedAt: ISODateTime;
+  createdAt: string;
+  updatedAt: string;
 }
 

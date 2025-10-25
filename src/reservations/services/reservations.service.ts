@@ -1,27 +1,41 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import {
   AvailabilityParam,
-  ReservationsByTable,
-  SlotAvailability,
+  CreateReservationResponse,
+  SectorStatusResponse
 } from '../interfaces/reservations.types';
 import { ReservationsRepository } from '../repositories/reservations.repository';
-import { Slot } from 'src/reservations/entities/slot';
 import { CustomersRepository } from 'src/customers/repositories/customers.repository';
 import { CreateReservationDto } from '../dtos/create-reservation.dto';
-import { Table } from '../entities/table.entity';
-import { Restaurant, Shift } from '../entities/restaurant.entity';
-import { addMinutes, isWithinInterval, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { RESERVATION_DURATION, SLOT_MINUTES } from 'src/shared/shared.const';
-import { RestaurantRepository } from 'src/restaurant/repositories/restaurant.repository';
+import { RestaurantRepository } from 'src/restaurants/repositories/restaurant.repository';
 import { ReservationsHelper } from '../helpers/reservation.helper';
+import { TableHelper } from 'src/tables/helpers/table.helper';
+import { TableRepository } from 'src/tables/table.repository';
+import { Table } from 'src/tables/entities/table.entity';
+import { DailyReservationsQueryDto } from '../dtos/daily-reservation.dto';
 
 @Injectable()
 export class ReservationsService {
+  readonly logger: Logger = new Logger(ReservationsService.name);
+
   @Inject() reservationsRepository: ReservationsRepository;
   @Inject() customersRepository: CustomersRepository;
   @Inject() restaurantRepository: RestaurantRepository;
+  @Inject() tableRepository: TableRepository;
 
-  getSectorStatus = async (params: AvailabilityParam) => {
+  getSectorStatus = async (
+    params: AvailabilityParam,
+  ): Promise<SectorStatusResponse> => {
     try {
       const restaurant = await this.restaurantRepository.getByIdOrFail(
         params.restaurantId,
@@ -44,56 +58,113 @@ export class ReservationsService {
         durationMinutes: RESERVATION_DURATION,
         slots: slotsStatus,
       };
-    } catch (e) {}
+    } catch (e) {
+      if (e instanceof HttpException) throw e;
+      throw new InternalServerErrorException('Failed to get sector status');
+    }
   };
 
-  create = async (data: CreateReservationDto) => {
+  create = async (
+    data: CreateReservationDto,
+  ): Promise<CreateReservationResponse> => {
     try {
+      const { restaurantId, partySize } = data;
+
       const customer = await this.customersRepository.getOrCreate(data);
 
-      const sectorStatus =
-        await this.reservationsRepository.getSectorStatusByPartySize({
-          ...data,
-          date: data.startDateTimeISO,
-        });
+      const restaurant =
+        await this.restaurantRepository.getByIdOrFail(restaurantId);
 
-      const restaurant = await this.restaurantRepository.getByIdOrFail(
-        data.restaurantId,
-      );
+      const { reservationStart, reservationEnd } =
+        ReservationsHelper.getReservationStartAndEnd(
+          data.startDateTimeISO,
+          restaurant.timezone,
+        );
 
-      const availableTables = sectorStatus.filter((s) => !s.reservationId);
-
-      if (!this.isWithinShift(restaurant.shifts, data.startDateTimeISO)) {
-        throw new Error('Reservation time is outside of restaurant shifts');
+      //Comprobar que la reserva esté dentro de un turno
+      if (
+        !ReservationsHelper.isWithinShift(restaurant.shifts, reservationStart)
+      ) {
+        throw new UnprocessableEntityException(
+          'Reservation time is outside of restaurant shifts',
+        );
       }
 
-      const table = Table.findTableWithLeastSpace(availableTables);
-      if (!table) throw new Error('No available table found');
+      const sectorStatus = await this.getSectorStatus({
+        ...data,
+        date: reservationStart.toISOString().substring(0, 10),
+      });
 
-      const endDate = addMinutes(
-        new Date(data.startDateTimeISO),
-        RESERVATION_DURATION,
-      ).toISOString();
+      const tablesAvailableIds = TableHelper.getAvailableTables(
+        sectorStatus.slots,
+        reservationStart,
+        reservationEnd,
+      );
 
-      return this.reservationsRepository.create(data, customer, endDate);
+      if (tablesAvailableIds.length === 0)
+        throw new ConflictException(
+          'No available table fits party size at requested time',
+        );
+
+      const tables =
+        await this.tableRepository.findManyById(tablesAvailableIds);
+      const table = Table.findTableWithLeastSpace(tables, partySize);
+
+      const reservation = await this.reservationsRepository.create({
+        restaurantId,
+        sectorId: data.sectorId,
+        partySize,
+        tableId: table.id,
+        startDateTimeISO: format(reservationStart, 'yyyy-MM-dd HH:mm:ss'),
+        endDateTimeISO: format(reservationEnd, 'yyyy-MM-dd HH:mm:ss'),
+        customerId: customer.id,
+        notes: data.notes || ''
+      });
+
+      return {
+        restaurantId: reservation.restaurantId,
+        sectorId: reservation.sectorId,
+        partySize: reservation.partySize,
+        startDateTimeISO: reservation.startDateTimeISO,
+        customer: {
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+        },
+        notes: data.notes,
+      };
     } catch (e) {
-      throw e;
+      if (e instanceof HttpException) throw e;
+      this.logger.error('Failed to create reservation', e);
+      throw new InternalServerErrorException('Failed to create reservation');
     }
   };
 
   cancel = async (id: string) => {
-    return this.reservationsRepository.cancel(id);
+    try {
+      await this.reservationsRepository.cancel(id);
+    } catch (e) {
+      if (e instanceof HttpException) throw e;
+      this.logger.error('Failed to cancel reservation', e);
+      throw new InternalServerErrorException('Failed to cancel reservation');
+    }
   };
 
-  isWithinShift = (shifts: Shift[] | undefined, time: string): boolean => {
-    if (!shifts) return true;
-    // parsea la hora que querés verificar
-    const target = parse(time, 'HH:mm', new Date());
-
-    return shifts.some((shift) => {
-      const start = parse(shift.start, 'HH:mm', new Date());
-      const end = parse(shift.end, 'HH:mm', new Date());
-      return isWithinInterval(target, { start, end });
-    });
+  getDailyReservations = async (params: DailyReservationsQueryDto) => {
+    try {
+      const reservations =
+        await this.reservationsRepository.findDailyReservations(
+          params.restaurantId,
+          params.date,
+          params.sectorId,
+        );
+      return reservations;
+    } catch (e) {
+      if (e instanceof HttpException) throw e;
+      this.logger.error('Failed to get daily reservations', e);
+      throw new InternalServerErrorException(
+        'Failed to get daily reservations',
+      );
+    }
   };
 }

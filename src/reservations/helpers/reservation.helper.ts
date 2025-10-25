@@ -1,10 +1,13 @@
-import { Restaurant } from '../entities/restaurant.entity';
+import { convertDateStringToTzDate } from 'src/shared/shared.helper';
+import { Restaurant, Shift } from '../../restaurants/entities/restaurant.entity';
 import { Slot } from '../entities/slot';
 import {
   AvailabilityQueryResult,
   ReservationsByTable,
   SlotAvailability,
 } from '../interfaces/reservations.types';
+import { addMinutes } from 'date-fns';
+import { RESERVATION_DURATION } from 'src/shared/shared.const';
 
 export class ReservationsHelper {
   static groupReservationsByTable = (
@@ -25,6 +28,7 @@ export class ReservationsHelper {
 
     return tables;
   };
+  
 
   buildSlotAvailability = (
     reservationTables: ReservationsByTable,
@@ -77,5 +81,38 @@ export class ReservationsHelper {
     }
 
     return availableTables;
+  };
+
+  static getReservationStartAndEnd = (startDateTimeISO: string, timezone: string) => {
+          const reservationStart = convertDateStringToTzDate(
+            startDateTimeISO,
+            timezone,
+          );
+    
+          const reservationEnd = addMinutes(reservationStart, RESERVATION_DURATION);
+
+          return { reservationStart, reservationEnd };
+  }
+
+  static isWithinShift = (shifts: Shift[] | undefined, resDate: Date): boolean => {
+    if (!shifts || shifts.length === 0) return true;
+
+    const targetHours = resDate.getHours();
+    const targetMinutes = resDate.getMinutes();
+    const targetTimeInMinutes = targetHours * 60 + targetMinutes;
+
+    const timeToMinutes = (timeStr: string): number => {
+      const [h, m] = timeStr.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    return shifts.some((shift) => {
+      const startInMinutes = timeToMinutes(shift.start);
+      const endInMinutes = timeToMinutes(shift.end);
+      return (
+        targetTimeInMinutes >= startInMinutes &&
+        targetTimeInMinutes <= endInMinutes
+      );
+    });
   };
 }

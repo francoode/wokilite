@@ -1,21 +1,32 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ReservationsModule } from './reservations/reservations.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CustomersModule } from './customers/customers.module';
-import { RestaurantModule } from './restaurant/restaurant.module';
+import { ReservationsRepository } from './reservations/repositories/reservations.repository';
+import { ReservationsService } from './reservations/services/reservations.service';
+import { RestaurantRepository } from './restaurants/repositories/restaurant.repository';
+import { CustomersRepository } from './customers/repositories/customers.repository';
+import { ReservationsController } from './reservations/reservations.controller';
+import { TableRepository } from './tables/table.repository';
 
 @Module({
-  imports: [ReservationsModule, TypeOrmModule.forRoot({
+  imports: [
+    TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'db',
       port: 3306,
       username: 'root',
       password: 'root',
       database: 'wokilite',
-    }), CustomersModule, RestaurantModule,],
-  controllers: [AppController],
-  providers: [AppService],
+    }),
+  ],
+  controllers: [
+    ReservationsController
+  ],
+  providers: [
+    ReservationsRepository,
+    ReservationsService,
+    RestaurantRepository,
+    CustomersRepository,
+    TableRepository
+  ],
 })
 export class AppModule {}

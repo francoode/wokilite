@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { Restaurant } from 'src/reservations/entities/restaurant.entity';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { DataSource } from 'typeorm';
 
 @Injectable()

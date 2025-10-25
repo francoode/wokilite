@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, Min, IsISO8601, IsEmail, Matches, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, Min, IsISO8601, IsEmail, Matches, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CustomerDto {
@@ -24,6 +24,7 @@ export class CreateReservationDto {
   sectorId: string;
 
   @IsInt()
+  @Type(() => Number)
   @Min(1)
   partySize: number;
 
@@ -31,10 +32,11 @@ export class CreateReservationDto {
   startDateTimeISO: string;
 
   @ValidateNested()
+  @IsNotEmpty()
   @Type(() => CustomerDto)
   customer: CustomerDto;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   notes: string;
 }

@@ -1,5 +1,3 @@
-import { Slot } from "src/reservations/entities/slot";
-
 export type ReservationStatus = 'CONFIRMED' | 'CANCELLED';
 
 export type AvailabilityParam = {
@@ -8,7 +6,6 @@ export type AvailabilityParam = {
   date: string;
   partySize: number;
 };
-
 
 export type AvailabilityQueryResult = {
     tableId: string;
@@ -32,4 +29,23 @@ export type ReservationsByTable = { [key: string]: {
 
 export type SlotAvailability = {
   start: string, available: boolean, reason?: string, tables: string[]
+}
+
+export type SectorStatusResponse = {
+    slotMinutes: number;
+    durationMinutes: number;
+    slots: SlotAvailability[];
+}
+
+export type CreateReservationResponse = {
+  restaurantId: string;
+  sectorId: string;
+  partySize: number;
+  startDateTimeISO: string;
+  customer: {
+    name: string;
+    phone: string;
+    email: string;
+  };
+  notes?: string; 
 }

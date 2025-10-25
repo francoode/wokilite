@@ -1,5 +1,4 @@
-import { ISODateTime } from 'src/shared/types/types';
-import { Customer } from './customer.entity';
+import { Customer } from '../../customers/entities/customer.entity';
 import { ReservationStatus } from '../interfaces/reservations.types';
 
 export class Reservation {
@@ -8,11 +7,11 @@ export class Reservation {
   sectorId: string;
   tableId: string;                        
   partySize: number;
-  startDateTimeISO: ISODateTime;
-  endDateTimeISO: ISODateTime;
+  startDateTimeISO: string;
+  endDateTimeISO: string;
   status: ReservationStatus;
   customer: Customer;
   notes?: string;
-  createdAt: ISODateTime;
-  updatedAt: ISODateTime;
+  createdAt: string;
+  updatedAt: string;
 }
